@@ -1,43 +1,40 @@
 const express = require('express');
-let books = require("./booksdb.js");
-let isValid = require("./auth_users.js").isValid;
-let users = require("./auth_users.js").users;
-const public_users = express.Router();
+const books = require('./booksdb.js');
+const { register } = require('./auth_users.js');
+const general = express.Router();
 
+general.post('/register', register);
+general.get('/', (req, res) => res.json(books));
 
-public_users.post("/register", (req,res) => {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+general.get('/isbn/:isbn', (req, res) => {
+  const { isbn } = req.params;
+  if (!Object.hasOwn(books, isbn)) {
+    return res.status(404).json({ message: 'Book not found' });
+  }
+  return res.json(books[isbn]);
 });
 
-// Get the book list available in the shop
-public_users.get('/',function (req, res) {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+function findBooks(field, value) {
+  const query = value.trim().toLowerCase();
+  return Object.fromEntries(
+    Object.entries(books).filter(([, book]) => book[field].toLowerCase() === query)
+  );
+}
+
+general.get('/author/:author', (req, res) => {
+  return res.json(findBooks('author', req.params.author));
 });
 
-// Get book details based on ISBN
-public_users.get('/isbn/:isbn',function (req, res) {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
- });
-  
-// Get book details based on author
-public_users.get('/author/:author',function (req, res) {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+general.get('/title/:title', (req, res) => {
+  return res.json(findBooks('title', req.params.title));
 });
 
-// Get all books based on title
-public_users.get('/title/:title',function (req, res) {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+general.get('/review/:isbn', (req, res) => {
+  const { isbn } = req.params;
+  if (!Object.hasOwn(books, isbn)) {
+    return res.status(404).json({ message: 'Book not found' });
+  }
+  return res.json(books[isbn].reviews);
 });
 
-//  Get book review
-public_users.get('/review/:isbn',function (req, res) {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
-});
-
-module.exports.general = public_users;
+module.exports.general = general;
